@@ -1,10 +1,11 @@
-import pytest
 import numpy as np
 import numpy.testing as npt
+import pytest
 from scipy import fftpack, signal
 from skimage.data import grass
+
 import anyfft
-from anyfft._reikna._util import to_device, empty_like
+from anyfft._reikna._util import empty_like, to_device
 
 GRASS = grass().astype("float32")
 KERNEL = np.outer(

@@ -1,6 +1,6 @@
 from reikna.fft import FFTShift
 
-from ._util import empty_like, to_device, THREAD
+from ._util import THREAD, empty_like, to_device
 
 
 def fftshift(arr, axes=None, output_arr=None, inplace=False, thread=THREAD):

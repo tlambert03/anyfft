@@ -1,7 +1,8 @@
-from pyopencl.elementwise import ElementwiseKernel
-from ._fft import fftn, ifftn
 import numpy as np
-from ._util import is_cluda_array, THREAD, to_device, empty
+from pyopencl.elementwise import ElementwiseKernel
+
+from ._fft import fftn, ifftn
+from ._util import THREAD, empty, is_cluda_array, to_device
 
 _mult_complex = ElementwiseKernel(
     THREAD._context,

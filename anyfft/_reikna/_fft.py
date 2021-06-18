@@ -1,12 +1,14 @@
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING, Tuple, Union
+
+from typing import TYPE_CHECKING, Union
 
 import numpy as np
 import reikna.cluda as cluda
 from reikna.core import Type
 from reikna.fft import FFT
 from reikna.transformations import broadcast_const, combine_complex
-from ._util import to_device, empty_like, THREAD, is_cluda_array
+
+from ._util import THREAD, empty_like, is_cluda_array, to_device
 
 if TYPE_CHECKING:
     from reikna.cluda.cuda import Array as cudaArray
@@ -45,9 +47,9 @@ def _get_fft_plan(arr, axes=None, fast_math=True, thread=THREAD):
 
 
 def fftn(
-    input_arr: Union[np.ndarray, Array],
-    output_arr: Union[np.ndarray, Array] = None,
-    axes: Optional[Tuple[int, ...]] = None,
+    input_arr: np.ndarray | Array,
+    output_arr: np.ndarray | Array = None,
+    axes: tuple[int, ...] | None = None,
     inplace: bool = False,
     fast_math: bool = True,
     _inverse: bool = False,
