@@ -1,6 +1,7 @@
 import reikna.cluda as cluda
 
 api = cluda.ocl_api()
+# api = cluda.cuda_api()
 THREAD = api.Thread.create()
 
 

@@ -29,9 +29,9 @@ def reference_fftn(img):
     return fft.fftn(img)
 
 
-@pytest.mark.benchmark(warmup=False)
+@pytest.mark.benchmark(warmup='on')
 @pytest.mark.parametrize("plugin", list(anyfft.fft._PLUGINS))
-@pytest.mark.parametrize("shape", [(256, 256)])
+@pytest.mark.parametrize("shape", [(256, 512, 512)], ids=lambda x: x[0])
 @pytest.mark.parametrize("func", ["fftn"])
 def test_bench(func, plugin, shape, benchmark):
     arr = np.zeros(shape)

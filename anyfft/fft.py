@@ -8,6 +8,7 @@ _PLUGINS = {
     "numpy": "numpy.fft",
     "fftpack": "scipy.fftpack",
     "pyfftw": "anyfft.pyfftw",
+    "cupy": "anyfft.cupy",
 }
 
 
