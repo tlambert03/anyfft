@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Union
+from warnings import filterwarnings
 
 import numpy as np
+
 import reikna.cluda as cluda
 from reikna.core import Type
 from reikna.fft import FFT
 from reikna.transformations import broadcast_const, combine_complex
 
 from ._util import THREAD, empty_like, is_cluda_array, to_device
+
+filterwarnings("ignore", module="pyopencl")  # FIXME
+
 
 if TYPE_CHECKING:
     from reikna.cluda.cuda import Array as cudaArray
@@ -20,7 +25,7 @@ if TYPE_CHECKING:
 _PLAN_CACHE = {}
 
 
-def _get_fft_plan(arr, axes=None, fast_math=True, thread=THREAD):
+def _get_fft_plan(arr, axes=None, fast_math=False, thread=THREAD):
     """Cache and return a reikna FFT plan suitable for `arr` type and shape."""
     axes = _normalize_axes(arr.shape, axes)
     plan_key = (arr.shape, arr.dtype, axes, fast_math)
@@ -30,7 +35,6 @@ def _get_fft_plan(arr, axes=None, fast_math=True, thread=THREAD):
             plan = FFT(arr, axes=axes)
         else:
             type_ = Type(cluda.dtypes.complex_for(arr.dtype), arr.shape)
-            print(type_)
             plan = FFT(type_, axes=axes)
             # joins two real inputs into complex output
             cc = combine_complex(plan.parameter.input)
@@ -40,7 +44,6 @@ def _get_fft_plan(arr, axes=None, fast_math=True, thread=THREAD):
                 cc, cc.output, real_input=cc.real, imag_input=cc.imag
             )
             plan.parameter.imag_input.connect(bc, bc.output)
-
         _PLAN_CACHE[plan_key] = plan.compile(thread, fast_math=fast_math)
 
     return _PLAN_CACHE[plan_key]

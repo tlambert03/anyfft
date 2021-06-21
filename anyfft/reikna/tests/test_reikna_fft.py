@@ -5,7 +5,7 @@ from scipy import fftpack, signal
 from skimage.data import grass
 
 import anyfft
-from anyfft._reikna._util import empty_like, to_device
+from anyfft.reikna._util import empty_like, to_device
 
 GRASS = grass().astype("float32")
 KERNEL = np.outer(
