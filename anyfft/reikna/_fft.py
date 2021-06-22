@@ -41,24 +41,24 @@ def tform_r2c(arr):
     )
 
 
-# def tform_c2r(arr):
-#     """Transform a complex array to a real one by discarding the imaginary part."""
-#     real_dtype = cluda.dtypes.real_for(arr.dtype)
-#     return Transformation(
-#         [
-#             Parameter("output", Annotation(Type(real_dtype, arr.shape), "o")),
-#             Parameter("input", Annotation(arr, "i")),
-#         ],
-#         """
-#         ${output.store_same}(${input.load_same}.x);
-#         """,
-#     )
+def tform_c2r(arr):
+    """Transform a complex array to a real one by discarding the imaginary part."""
+    real_dtype = cluda.dtypes.real_for(arr.dtype)
+    return Transformation(
+        [
+            Parameter("output", Annotation(Type(real_dtype, arr.shape), "o")),
+            Parameter("input", Annotation(arr, "i")),
+        ],
+        """
+        ${output.store_same}(${input.load_same}.x);
+        """,
+    )
 
 
-def _get_fft_plan(arr, axes=None, fast_math=False, thread=THREAD):
+def _get_fft_plan(arr, axes=None, fast_math=False, _real_out=False, thread=THREAD):
     """Cache and return a reikna FFT plan suitable for `arr` type and shape."""
     axes = _normalize_axes(arr.shape, axes)
-    plan_key = (arr.shape, arr.dtype, axes, fast_math)
+    plan_key = (arr.shape, arr.dtype, axes, fast_math, _real_out)
 
     if plan_key not in _PLAN_CACHE:
         if np.iscomplexobj(arr):
@@ -67,8 +67,10 @@ def _get_fft_plan(arr, axes=None, fast_math=False, thread=THREAD):
             r2c = tform_r2c(arr)
             plan = FFT(r2c.output, axes=axes)
             plan.parameter.input.connect(r2c, r2c.output, new_input=r2c.input)
-            # c2r = tform_c2r(plan.parameter.output)
-            # plan.parameter.output.connect(c2r, c2r.output, new_output=c2r.input)
+
+        if _real_out:
+            c2r = tform_c2r(plan.parameter.output)
+            plan.parameter.output.connect(c2r, c2r.input, new_output=c2r.output)
 
         _PLAN_CACHE[plan_key] = plan.compile(thread, fast_math=fast_math)
 
@@ -83,6 +85,7 @@ def _fftn(
     fast_math: bool = True,
     *,
     _inverse: bool = False,
+    _real_out=False,
 ) -> Array:
     """Perform fast Fourier transformation on `input_array`.
 
@@ -147,7 +150,7 @@ def _fftn(
                 empty_like(arr_dev, np.complex64) if output_arr is None else output_arr
             )
 
-    plan = _get_fft_plan(input_arr, axes=axes, fast_math=fast_math)
+    plan = _get_fft_plan(input_arr, axes=axes, fast_math=fast_math, _real_out=_real_out)
     plan(res_dev, arr_dev, inverse=_inverse)
 
     if _isnumpy and output_arr is not None:
