@@ -1,3 +1,3 @@
-from .fft import fftconvolve, fftn, fftshift, ifftn
+from ._fft import fft, fftn, fftshift, ifft, ifftn, rfftn
 
-__all__ = ["fft", "fftconvolve", "fftn", "fftshift", "ifftn"]
+__all__ = ["fft", "fft", "fftn", "fftshift", "ifft", "ifftn", "rfftn"]
