@@ -1,9 +1,9 @@
-import numpy as np
-import numpy.testing as npt
 import pytest
-import scipy
 
 import anyfft
+import numpy as np
+import numpy.testing as npt
+import scipy
 
 
 @pytest.fixture(scope="session")
@@ -41,7 +41,10 @@ def test_bench(func, plugin, shape, benchmark):
 @pytest.mark.parametrize("plugin", anyfft._fft._PLUGINS)
 @pytest.mark.parametrize("func", ["fftn", "fft", "ifftn", "ifft", "fftshift"])
 def test_accuracy(random, plugin, func):
-    result = getattr(anyfft, func)(random, plugin=plugin)
+    try:
+        result = getattr(anyfft, func)(random, plugin=plugin)
+    except ModuleNotFoundError as e:
+        pytest.skip(str(e))
     if hasattr(result, "get"):  # FIXME: move to actual code
         result = result.get()
         if func != "fftshift":

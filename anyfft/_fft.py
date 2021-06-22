@@ -1,9 +1,8 @@
 import importlib
-from functools import wraps
 
 import scipy.fft
 
-__all__ = ["fftconvolve", "fftn", "fftshift", "ifftn"]
+__all__ = ["fftn", "ifftn", "fft", "ifft", "fftshift", "rfft"]
 _PLUGINS = ["cupy", "reikna", "scipy", "numpy", "fftpack", "pyfftw"]
 
 
@@ -53,11 +52,11 @@ def ifft(x, shape=None, axes=None, overwrite_x=False):
     ...
 
 
-@_implements(scipy.fft.fftshift)
-def fftshift(*args, **kwargs):
+@_implements(scipy.fft.rfft)
+def rfft(*args, **kwargs):
     ...
 
 
-@_implements(scipy.fft.ifftn)
-def ifftn(*args, **kwargs):
+@_implements(scipy.fft.fftshift)
+def fftshift(*args, **kwargs):
     ...

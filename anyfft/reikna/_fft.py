@@ -5,10 +5,9 @@ from warnings import filterwarnings
 
 import numpy as np
 import reikna.cluda as cluda
-from reikna.cluda.api import Thread
 from reikna.core import Type
-import reikna.fft
-from reikna.transformations import broadcast_const, combine_complex, split_complex
+from reikna.fft import FFT
+from reikna.transformations import Annotation, Parameter, Transformation
 
 from ._util import THREAD, empty_like, is_cluda_array, to_device
 
@@ -25,36 +24,51 @@ if TYPE_CHECKING:
 _PLAN_CACHE = {}
 
 
-def _get_fft_plan(
-    arr, axes=None, fast_math=False, thread: Thread = THREAD, real_out=False
-):
+def tform_r2c(arr):
+    """Transform a real array to a complex one by adding a zero imaginary part."""
+    complex_dtype = cluda.dtypes.complex_for(arr.dtype)
+    return Transformation(
+        [
+            Parameter("output", Annotation(Type(complex_dtype, arr.shape), "o")),
+            Parameter("input", Annotation(arr, "i")),
+        ],
+        """
+        ${output.store_same}(
+            COMPLEX_CTR(${output.ctype})(
+                ${input.load_same},
+                0));
+        """,
+    )
+
+
+# def tform_c2r(arr):
+#     """Transform a complex array to a real one by discarding the imaginary part."""
+#     real_dtype = cluda.dtypes.real_for(arr.dtype)
+#     return Transformation(
+#         [
+#             Parameter("output", Annotation(Type(real_dtype, arr.shape), "o")),
+#             Parameter("input", Annotation(arr, "i")),
+#         ],
+#         """
+#         ${output.store_same}(${input.load_same}.x);
+#         """,
+#     )
+
+
+def _get_fft_plan(arr, axes=None, fast_math=False, thread=THREAD):
     """Cache and return a reikna FFT plan suitable for `arr` type and shape."""
     axes = _normalize_axes(arr.shape, axes)
     plan_key = (arr.shape, arr.dtype, axes, fast_math)
 
     if plan_key not in _PLAN_CACHE:
         if np.iscomplexobj(arr):
-            plan = reikna.fft.FFT(arr, axes=axes)
+            plan = FFT(arr, axes=axes)
         else:
-            type_ = Type(cluda.dtypes.complex_for(arr.dtype), arr.shape)
-            plan = reikna.fft.FFT(type_, axes=axes)
-
-            # joins two real inputs into complex output
-            cc = combine_complex(plan.parameter.input)
-            # broadcasts 0 to the imaginary component
-            bc = broadcast_const(cc.imag, 0)
-            plan.parameter.input.connect(
-                cc, cc.output, real_input=cc.real, imag_input=cc.imag
-            )
-            plan.parameter.imag_input.connect(bc, bc.output)
-
-        # if real_out:
-        #     # split complex into 2 outputs
-        #     split = split_complex(plan.parameter.output)
-        #     plan.parameter.output.connect(
-        #         split, split.real, c_input=split.input, imag_out=split.imag
-        #     )
-        #     # plan.parameter.real_output.connect(split, split.real)
+            r2c = tform_r2c(arr)
+            plan = FFT(r2c.output, axes=axes)
+            plan.parameter.input.connect(r2c, r2c.output, new_input=r2c.input)
+            # c2r = tform_c2r(plan.parameter.output)
+            # plan.parameter.output.connect(c2r, c2r.output, new_output=c2r.input)
 
         _PLAN_CACHE[plan_key] = plan.compile(thread, fast_math=fast_math)
 
@@ -69,7 +83,6 @@ def _fftn(
     fast_math: bool = True,
     *,
     _inverse: bool = False,
-    _real_out: bool = False,
 ) -> Array:
     """Perform fast Fourier transformation on `input_array`.
 
@@ -134,7 +147,7 @@ def _fftn(
                 empty_like(arr_dev, np.complex64) if output_arr is None else output_arr
             )
 
-    plan = _get_fft_plan(input_arr, axes=axes, fast_math=fast_math, real_out=_real_out)
+    plan = _get_fft_plan(input_arr, axes=axes, fast_math=fast_math)
     plan(res_dev, arr_dev, inverse=_inverse)
 
     if _isnumpy and output_arr is not None:
@@ -206,7 +219,7 @@ def rfftn(
     inplace: bool = False,
     fast_math: bool = True,
 ) -> Array:
-    x = _fftn(input_arr, output_arr, axes, inplace, fast_math, _real_out=True)
+    x = _fftn(input_arr, output_arr, axes, inplace, fast_math)
     return x[:, : input_arr.shape[1] // 2 + 1]
 
 
