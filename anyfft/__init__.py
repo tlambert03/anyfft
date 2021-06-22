@@ -1,3 +1,35 @@
-from ._fft import fft, fftn, fftshift, ifft, ifftn, rfftn
+from ._fft import (  # fftfreq,; rfftfreq,
+    fft,
+    fft2,
+    fftn,
+    fftshift,
+    ifft,
+    ifft2,
+    ifftn,
+    ifftshift,
+    irfft,
+    irfft2,
+    irfftn,
+    rfft,
+    rfft2,
+    rfftn,
+)
 
-__all__ = ["fft", "fft", "fftn", "fftshift", "ifft", "ifftn", "rfftn"]
+__all__ = [
+    "fft",
+    "ifft",
+    "fft2",
+    "ifft2",
+    "fftn",
+    "ifftn",
+    "rfft",
+    "irfft",
+    "rfft2",
+    "irfft2",
+    "rfftn",
+    "irfftn",
+    "fftfreq",
+    "rfftfreq",
+    "fftshift",
+    "ifftshift",
+]

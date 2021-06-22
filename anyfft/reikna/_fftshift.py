@@ -3,7 +3,9 @@ from reikna.fft import FFTShift
 from ._util import THREAD, empty_like, to_device
 
 
-def fftshift(arr, axes=None, output_arr=None, inplace=False, thread=THREAD):
+def _fftshift(
+    arr, axes=None, output_arr=None, inplace=False, *, thread=THREAD, inverse=False
+):
     shift = FFTShift(arr, axes=axes)
     shiftc = shift.compile(thread)
 
@@ -12,5 +14,13 @@ def fftshift(arr, axes=None, output_arr=None, inplace=False, thread=THREAD):
         res_dev = arr_dev
     else:
         res_dev = empty_like(arr_dev) if output_arr is None else output_arr
-    shiftc(res_dev, arr_dev)
+    shiftc(res_dev, arr_dev, inverse=inverse)
     return res_dev
+
+
+def fftshift(arr, axes=None, output_arr=None, inplace=False):
+    return _fftshift(arr, axes, output_arr, inplace)
+
+
+def ifftshift(arr, axes=None, output_arr=None, inplace=False):
+    return _fftshift(arr, axes, output_arr, inplace, inverse=True)

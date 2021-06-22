@@ -31,23 +31,28 @@ def reference_func(func, img):
 
 @pytest.mark.benchmark(warmup=True)
 @pytest.mark.parametrize("plugin", list(anyfft._fft._PLUGINS))
-@pytest.mark.parametrize("shape", [(128, 256, 256)], ids=lambda x: x[0])
+@pytest.mark.parametrize("shape", [(256, 256, 256)], ids=lambda x: x[0])
 @pytest.mark.parametrize("func", ["fftn"])
 def test_bench(func, plugin, shape, benchmark):
-    arr = np.zeros(shape)
-    benchmark(getattr(anyfft, func), arr, plugin=plugin)
+    try:
+        _func = getattr(anyfft, func)
+        benchmark(_func, np.zeros(shape), plugin=plugin)
+    except ModuleNotFoundError as e:
+        pytest.xfail(str(e))
 
 
 @pytest.mark.parametrize("plugin", anyfft._fft._PLUGINS)
-@pytest.mark.parametrize("func", ["fftn", "fft", "ifftn", "ifft", "fftshift"])
+@pytest.mark.parametrize("func", anyfft.__all__)
 def test_accuracy(random, plugin, func):
+    if not hasattr(anyfft, func):
+        pytest.skip()
     try:
         result = getattr(anyfft, func)(random, plugin=plugin)
-    except ModuleNotFoundError as e:
-        pytest.skip(str(e))
+    except (ModuleNotFoundError, AttributeError) as e:
+        pytest.xfail(str(e))
     if hasattr(result, "get"):  # FIXME: move to actual code
         result = result.get()
-        if func != "fftshift":
+        if "fftshift" not in func and "irfft" not in func:
             result = result.astype(np.complex128)
     ref = reference_func(func, random)
     assert ref.shape == result.shape

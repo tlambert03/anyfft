@@ -3,7 +3,14 @@ import importlib
 import scipy.fft
 
 __all__ = ["fftn", "ifftn", "fft", "ifft", "fftshift", "rfft"]
-_PLUGINS = ["cupy", "reikna", "scipy", "numpy", "fftpack", "pyfftw"]
+_PLUGINS = [
+    "cupy",
+    "reikna",
+    "scipy",
+    "numpy",
+    "pyfftw",
+    # "fftpack",
+]
 
 
 def _get_fft_module(plugin):
@@ -27,28 +34,33 @@ def _implements(scipy_func):
     return plugin_func
 
 
-@_implements(scipy.fft.fftn)
-def fftn(x, shape=None, axes=None, overwrite_x=False):
-    ...
-
-
-@_implements(scipy.fft.rfftn)
-def rfftn(x, shape=None, axes=None, overwrite_x=False):
-    ...
-
-
 @_implements(scipy.fft.fft)
-def fft(x, shape=None, axes=None, overwrite_x=False):
-    ...
-
-
-@_implements(scipy.fft.ifftn)
-def ifftn(x, shape=None, axes=None, overwrite_x=False):
+def fft(*args, **kwargs):
     ...
 
 
 @_implements(scipy.fft.ifft)
-def ifft(x, shape=None, axes=None, overwrite_x=False):
+def ifft(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.fft2)
+def fft2(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.ifft2)
+def ifft2(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.fftn)
+def fftn(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.ifftn)
+def ifftn(*args, **kwargs):
     ...
 
 
@@ -57,6 +69,46 @@ def rfft(*args, **kwargs):
     ...
 
 
+@_implements(scipy.fft.irfft)
+def irfft(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.rfft2)
+def rfft2(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.irfft2)
+def irfft2(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.rfftn)
+def rfftn(*args, **kwargs):
+    ...
+
+
+@_implements(scipy.fft.irfftn)
+def irfftn(*args, **kwargs):
+    ...
+
+
 @_implements(scipy.fft.fftshift)
 def fftshift(*args, **kwargs):
     ...
+
+
+@_implements(scipy.fft.ifftshift)
+def ifftshift(*args, **kwargs):
+    ...
+
+
+# @_implements(scipy.fft.fftfreq)
+# def fftfreq(*args, **kwargs):
+#     ...
+
+
+# @_implements(scipy.fft.rfftfreq)
+# def rfftfreq(*args, **kwargs):
+#     ...
