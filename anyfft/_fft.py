@@ -9,6 +9,7 @@ _PLUGINS = [
     "scipy",
     "numpy",
     "pyfftw",
+    # "gpyfft",
     # "fftpack",
 ]
 

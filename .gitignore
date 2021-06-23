@@ -104,3 +104,4 @@ ENV/
 # IDE settings
 .vscode/
 .benchmarks/
+anyfft/_version.py
