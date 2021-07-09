@@ -1,6 +1,8 @@
-import cupy as cp
 from functools import wraps
+
+import cupy as cp
 import numpy as np
+
 
 # TODO: improve performance
 def np2xp(func):
