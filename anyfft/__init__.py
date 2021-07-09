@@ -32,4 +32,7 @@ __all__ = [
     "rfftfreq",
     "fftshift",
     "ifftshift",
+    "ReiknaBackend",
 ]
+
+from ._backend import ReiknaBackend
