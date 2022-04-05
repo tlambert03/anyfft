@@ -9,7 +9,7 @@ from reikna.core import Type
 from reikna.fft import FFT
 from reikna.transformations import Annotation, Parameter, Transformation
 
-from ._util import THREAD, empty_like, is_cluda_array, to_device
+from ._util import empty_like, get_thread, is_cluda_array, to_device
 
 filterwarnings("ignore", module="pyopencl")  # FIXME
 
@@ -55,8 +55,10 @@ def tform_c2r(arr):
     )
 
 
-def _get_fft_plan(arr, axes=None, fast_math=False, _real_out=False, thread=THREAD):
+def _get_fft_plan(arr, axes=None, fast_math=False, _real_out=False, thread=None):
     """Cache and return a reikna FFT plan suitable for `arr` type and shape."""
+    if thread is None:
+        thread = get_thread()
     axes = _normalize_axes(arr.shape, axes)
     plan_key = (arr.shape, arr.dtype, axes, fast_math, _real_out)
 
@@ -82,7 +84,7 @@ def _fftn(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, ...] | None = None,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
     *,
     _inverse: bool = False,
     _real_out=False,
@@ -174,7 +176,7 @@ def fft(
     output_arr: np.ndarray | Array = None,
     axes: int = -1,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     return fftn(input_arr, output_arr, (axes,), inplace, fast_math)
 
@@ -184,7 +186,7 @@ def ifft(
     output_arr: np.ndarray | Array = None,
     axes: int = -1,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     return ifftn(input_arr, output_arr, (axes,), inplace, fast_math)
 
@@ -194,7 +196,7 @@ def fft2(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, int] = (-2, -1),
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     return fftn(input_arr, output_arr, axes, inplace, fast_math)
 
@@ -204,7 +206,7 @@ def ifft2(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, int] = (-2, -1),
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     return ifftn(input_arr, output_arr, axes, inplace, fast_math)
 
@@ -214,7 +216,7 @@ def fftn(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, ...] | None = None,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     return _fftn(input_arr, output_arr, axes, inplace, fast_math)
 
@@ -224,7 +226,7 @@ def ifftn(
     output_arr=None,
     axes=None,
     inplace=False,
-    fast_math=True,
+    fast_math=False,
 ):
     return _fftn(input_arr, output_arr, axes, inplace, fast_math, _inverse=True)
 
@@ -234,7 +236,7 @@ def rfft(
     output_arr: np.ndarray | Array = None,
     axes: int = -1,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     x = _fftn(input_arr, output_arr, (axes,), inplace, fast_math)
     return x[:, : input_arr.shape[-1] // 2 + 1]
@@ -246,7 +248,7 @@ def rfft(
 #     output_arr: np.ndarray | Array = None,
 #     axes: int = -1,
 #     inplace: bool = False,
-#     fast_math: bool = True,
+#     fast_math: bool = False,
 # ) -> Array:
 #     x = _fftn(input_arr, output_arr, axes, inplace, fast_math, _inverse=True)
 #     shp = list(input_arr.shape)
@@ -263,7 +265,7 @@ def rfft2(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, int] = (-2, -1),
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     x = _fftn(input_arr, output_arr, axes, inplace, fast_math)
     return x[:, : input_arr.shape[1] // 2 + 1]
@@ -275,7 +277,7 @@ def rfft2(
 #     output_arr: np.ndarray | Array = None,
 #     axes: Tuple[int, int] = (-2, -1),
 #     inplace: bool = False,
-#     fast_math: bool = True,
+#     fast_math: bool = False,
 # ) -> Array:
 #     x = _fftn(input_arr, output_arr, axes, inplace, fast_math)
 #     return x[:, : input_arr.shape[1] // 2 + 1]
@@ -286,7 +288,7 @@ def rfftn(
     output_arr: np.ndarray | Array = None,
     axes: tuple[int, ...] | None = None,
     inplace: bool = False,
-    fast_math: bool = True,
+    fast_math: bool = False,
 ) -> Array:
     x = _fftn(input_arr, output_arr, axes, inplace, fast_math)
     return x[:, : input_arr.shape[1] // 2 + 1]
@@ -298,7 +300,7 @@ def rfftn(
 #     output_arr: np.ndarray | Array = None,
 #     axes: tuple[int, ...] | None = None,
 #     inplace: bool = False,
-#     fast_math: bool = True,
+#     fast_math: bool = False,
 # ) -> Array:
 #     x = _fftn(input_arr, output_arr, axes, inplace, fast_math)
 #     return x[..., : input_arr.shape[1] // 2 + 1]

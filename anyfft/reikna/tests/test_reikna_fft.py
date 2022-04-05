@@ -24,7 +24,7 @@ def test_scipy_fft():
 
 
 def test_fft():
-    gpu_fface = anyfft.reikna.fftn(FACE)
+    gpu_fface = anyfft.reikna.fftn(FACE, fast_math=False)
     fface = gpu_fface.get()
 
     assert not np.allclose(fface, FACE, atol=100)
@@ -32,12 +32,12 @@ def test_fft():
 
     gpu_ifgrss = anyfft.ifftn(gpu_fface)
     ifgrss = gpu_ifgrss.get()
-    npt.assert_allclose(ifgrss.real, FACE, atol=0.001)
+    npt.assert_allclose(ifgrss.real, FACE, atol=0.04)
 
 
 def test_fft3d():
     img = np.random.rand(128, 128, 128)
-    gpu_fimg = anyfft.reikna.fftn(img)
+    gpu_fimg = anyfft.reikna.fftn(img, fast_math=False)
     fimg = gpu_fimg.get()
 
     assert not np.allclose(fimg, img, atol=100)
@@ -49,16 +49,16 @@ def test_fft3d():
 
 
 def test_fft_output_array():
-    input = to_device(FACE.astype(np.complex64))
-    out = empty_like(input)
-    anyfft.reikna.fftn(input, out)
+    _input = to_device(FACE.astype(np.complex64))
+    out = empty_like(_input)
+    anyfft.reikna.fftn(_input, out, fast_math=False)
     npt.assert_allclose(out.get(), fftpack.fftn(FACE), rtol=4e-2)
 
 
 def test_fft_inplace():
-    input = to_device(FACE.astype(np.complex64))
-    anyfft.reikna.fftn(input, inplace=True)
-    npt.assert_allclose(input.get(), fftpack.fftn(FACE), rtol=4e-2)
+    _input = to_device(FACE.astype(np.complex64))
+    anyfft.reikna.fftn(_input, inplace=True, fast_math=False)
+    npt.assert_allclose(_input.get(), fftpack.fftn(FACE), rtol=4e-2)
 
 
 def test_fft_errors():
@@ -70,12 +70,12 @@ def test_fft_errors():
     anyfft.reikna.fftn(to_device(FACE.astype(np.complex64)))
     anyfft.reikna.fftn(FACE)
 
-    input = to_device(FACE.astype(np.complex64))
-    out = empty_like(input)
+    _input = to_device(FACE.astype(np.complex64))
+    out = empty_like(_input)
 
     with pytest.raises(ValueError):
         # cannot provide both output and inplace
-        anyfft.reikna.fftn(input, out, inplace=True)
+        anyfft.reikna.fftn(_input, out, inplace=True)
 
     with pytest.raises(ValueError):
         # cannot use inplace with numpy array
@@ -84,12 +84,16 @@ def test_fft_errors():
 
 def test_fftshift():
     scp_shift = fftpack.fftshift(FACE)
-    shift = anyfft.reikna.fftshift(FACE).get()
-    npt.assert_allclose(scp_shift, shift)
+    shift = anyfft.reikna.fftshift(FACE)
+    npt.assert_allclose(scp_shift, shift.get())
+
+    scp_unshift = fftpack.ifftshift(scp_shift)
+    unshift = anyfft.reikna.ifftshift(shift)
+    npt.assert_allclose(scp_unshift, unshift.get())
 
 
 def test_fftconvolve_same():
-    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="same").get()
+    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="same", fast_math=False).get()
     scp_out = signal.fftconvolve(FACE, KERNEL, mode="same")
     assert out.shape == scp_out.shape
     assert out.dtype == scp_out.dtype
@@ -97,7 +101,7 @@ def test_fftconvolve_same():
 
 
 def test_fftconvolve_from_oclarray():
-    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="same")
+    out = anyfft.reikna.fftconvolve(FACE.astype("complex64"), KERNEL, mode="same")
     out2 = anyfft.reikna.fftconvolve(
         to_device(FACE.astype("complex64")), KERNEL, mode="same"
     )
@@ -105,7 +109,7 @@ def test_fftconvolve_from_oclarray():
 
 
 def test_fftconvolve_full():
-    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="full").get()
+    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="full", fast_math=False).get()
     scp_out = signal.fftconvolve(FACE, KERNEL, mode="full")
     assert out.shape == scp_out.shape
     assert out.dtype == scp_out.dtype
@@ -113,7 +117,7 @@ def test_fftconvolve_full():
 
 
 def test_fftconvolve_valid():
-    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="valid").get()
+    out = anyfft.reikna.fftconvolve(FACE, KERNEL, mode="valid", fast_math=False).get()
     scp_out = signal.fftconvolve(FACE, KERNEL, mode="valid")
     assert out.shape == scp_out.shape
     assert out.dtype == scp_out.dtype

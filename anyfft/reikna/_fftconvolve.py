@@ -3,14 +3,21 @@ from pyopencl.elementwise import ElementwiseKernel
 import numpy as np
 
 from ._fft import fftn, ifftn
-from ._util import THREAD, empty, is_cluda_array, to_device
+from ._util import empty, get_thread, is_cluda_array, to_device
 
-_mult_complex = ElementwiseKernel(
-    THREAD._context,
-    "cfloat_t *a, cfloat_t * b",
-    "a[i] = cfloat_mul(a[i], b[i])",
-    "mult",
-)
+complex_mult_kernel = None
+
+
+def _mult_complex():
+    global complex_mult_kernel
+    if complex_mult_kernel is None:
+        complex_mult_kernel = ElementwiseKernel(
+            get_thread()._context,
+            "cfloat_t *a, cfloat_t * b",
+            "a[i] = cfloat_mul(a[i], b[i])",
+            "mult",
+        )
+    return complex_mult_kernel
 
 
 def _fix_shape(arr, shape):
@@ -33,6 +40,7 @@ def fftconvolve(
     output_arr=None,
     inplace=False,
     kernel_is_fft=False,
+    fast_math=False,
 ):
     if mode not in {"valid", "same", "full"}:
         raise ValueError("acceptable mode flags are 'valid', 'same', or 'full'")
@@ -59,13 +67,13 @@ def fftconvolve(
 
     if not kernel_is_fft:
         kern_g = kernel_g.copy()
-        fftn(kern_g, inplace=True)
+        fftn(kern_g, inplace=True, fast_math=fast_math)
     else:
         kern_g = kernel_g
 
-    fftn(result_g, inplace=True, axes=axes)
-    _mult_complex(result_g, kern_g)
-    ifftn(result_g, inplace=True, axes=axes)
+    fftn(result_g, inplace=True, axes=axes, fast_math=fast_math)
+    _mult_complex()(result_g, kern_g)
+    ifftn(result_g, inplace=True, axes=axes, fast_math=fast_math)
 
     _out = result_g.real if np.isrealobj(data) else result_g
 

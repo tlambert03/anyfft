@@ -177,7 +177,7 @@ def ifftn(
     output_arr=None,
     axes=None,
     inplace=False,
-    fast_math=True,
+    fast_math=False,
 ):
     return _fftn(input_arr, output_arr, axes, inplace, fast_math, _inverse=True)
 
