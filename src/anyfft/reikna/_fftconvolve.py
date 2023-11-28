@@ -1,6 +1,5 @@
-from pyopencl.elementwise import ElementwiseKernel
-
 import numpy as np
+from pyopencl.elementwise import ElementwiseKernel
 
 from ._fft import fftn, ifftn
 from ._util import empty, get_thread, is_cluda_array, to_device

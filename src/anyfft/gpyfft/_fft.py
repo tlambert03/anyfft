@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Union
 from warnings import filterwarnings
 
+import numpy as np
 import pyopencl as cl
 import pyopencl.array as cla
-
-import numpy as np
 from gpyfft.fft import FFT
 
 from ._util import get_context
