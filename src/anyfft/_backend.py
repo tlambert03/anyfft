@@ -2,7 +2,7 @@ from . import reikna
 
 
 class ReiknaBackend:
-    """The default backend for fft calculations
+    """The default backend for fft calculations.
 
     Notes
     -----

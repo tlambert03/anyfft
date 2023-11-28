@@ -103,7 +103,7 @@ def __ua_function__(method, args, kwargs):
 
 
 def _implements(scipy_func):
-    '''Decorator adds function to the dictionary of implemented functions'''
+    '''Decorator adds function to the dictionary of implemented functions.'''
     def inner(func):
         _implemented[scipy_func] = func
         return func
@@ -122,8 +122,8 @@ def _workers_to_threads(workers):
         if workers >= -_cpu_count:
             workers += 1 + _cpu_count
         else:
-            raise ValueError("workers value out of range; got {}, must not be"
-                             " less than {}".format(workers, -_cpu_count))
+            raise ValueError(f"workers value out of range; got {workers}, must not be"
+                             f" less than {-_cpu_count}")
     elif workers == 0:
         raise ValueError("workers must not be zero")
     return workers

@@ -1,13 +1,15 @@
-import pytest
+from typing import Callable
 
-import anyfft
 import numpy as np
 import numpy.testing as npt
+import pytest
 import scipy
+
+import anyfft
 
 
 @pytest.fixture(scope="session")
-def img():
+def img() -> np.ndarray:
     return scipy.misc.face(gray=True)
 
 
@@ -19,13 +21,13 @@ def random(request):
 
 
 @pytest.fixture(scope="session")
-def kernel():
+def kernel() -> np.ndarray:
     return np.outer(
         scipy.signal.windows.gaussian(70, 8), scipy.signal.windows.gaussian(70, 8)
     ).astype("float32")
 
 
-def reference_func(func, img):
+def reference_func(func: Callable, img: np.ndarray) -> np.ndarray:
     return getattr(scipy.fft, func)(img)
 
 
@@ -33,7 +35,7 @@ def reference_func(func, img):
 @pytest.mark.parametrize("plugin", list(anyfft._fft._PLUGINS))
 @pytest.mark.parametrize("shape", [(256, 256, 256)], ids=lambda x: x[0])
 @pytest.mark.parametrize("func", ["fftn"])
-def test_bench(func, plugin, shape, benchmark):
+def test_bench(func, plugin, shape, benchmark) -> None:
     try:
         _func = getattr(anyfft, func)
         benchmark(_func, np.zeros(shape), plugin=plugin)

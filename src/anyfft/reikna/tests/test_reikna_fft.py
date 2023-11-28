@@ -1,10 +1,10 @@
-import pytest
-
-import anyfft.reikna
 import numpy as np
 import numpy.testing as npt
-from anyfft.reikna._util import empty_like, to_device
+import pytest
 from scipy import fftpack, misc, signal
+
+import anyfft.reikna
+from anyfft.reikna._util import empty_like, to_device
 
 FACE = misc.face(gray=True).astype("float32")
 KERNEL = np.outer(
@@ -62,7 +62,6 @@ def test_fft_inplace():
 
 
 def test_fft_errors():
-
     with pytest.raises(TypeError):
         # existing OCLArray must be of complex type
         anyfft.reikna.fftn(to_device(FACE))
